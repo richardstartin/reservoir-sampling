@@ -26,14 +26,14 @@ public class AlgorithmX {
     }
 
     private long nextSkip() {
-        long s = -1;
+        long s = 0;
         double u = ThreadLocalRandom.current().nextDouble();
         double numerator = 1;
         double denominator = 1;
         do {
-            ++s;
-            numerator *= (counter + 1 - reservoir.length - s);
+            numerator *= (Math.max(counter, reservoir.length) + 1 - reservoir.length - s);
             denominator *= (double)(counter + 1 - s);
+            ++s;
         } while (numerator/denominator > u);
         return s;
     }
