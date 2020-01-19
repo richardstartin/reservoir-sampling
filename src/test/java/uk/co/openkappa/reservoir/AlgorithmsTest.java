@@ -3,6 +3,7 @@ package uk.co.openkappa.reservoir;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
@@ -17,10 +18,12 @@ public class AlgorithmsTest {
     @BeforeClass
     public static void setup() {
         intensity = 0.1;
-        sampleSize = 2000;
-        data = IntStream.range(0, sampleSize * 100)
+        sampleSize = 1000;
+        data = IntStream.range(0, sampleSize * 1000)
                 .mapToDouble(i -> expRV(intensity))
                 .toArray();
+        // sort to make sure that there is no position bias!
+        Arrays.sort(data);
     }
 
     private static double expRV(double intensity) {
@@ -61,7 +64,7 @@ public class AlgorithmsTest {
         double mean = z.mean();
         // should be very close to the intensity of the exponentially distributed input
         System.out.println(1/mean);
-        assertEquals(1/mean, intensity, 0.01);
+        assertEquals(1/mean, intensity, 0.05);
     }
 
 

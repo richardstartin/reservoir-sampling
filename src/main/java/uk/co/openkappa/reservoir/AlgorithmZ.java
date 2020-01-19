@@ -28,55 +28,43 @@ public class AlgorithmZ {
     }
 
     private long nextSkip() {
-        if (counter < threshold * reservoir.length) {
+        if (counter <= threshold * reservoir.length) {
             return nextSkipLinearSearch();
         }
-        long s;
-        double w = Math.exp((-Math.log(ThreadLocalRandom.current().nextDouble())/reservoir.length));
-        double term = counter - reservoir.length + 1;
+        double c = (double)(counter + 1)/(counter - reservoir.length + 1);
         while (true) {
             double u = ThreadLocalRandom.current().nextDouble();
-            double x = counter * (w-1.0);
-            s = (long)x;
-            double lhs = Math.exp(Math.log(((u * (Math.pow((counter + 1)/term, 2)) * (term + s)/(counter + x))))/reservoir.length);
-            double rhs = (((counter + x)/(term + s)) * term)/counter;
-            if (lhs < rhs) {
-                w = rhs/lhs;
-                continue;
+            double x = counter * (Math.exp(ThreadLocalRandom.current().nextDouble() / reservoir.length) - 1);
+            long s = (long)x;
+            double g = (reservoir.length)/(counter + x)*Math.pow(counter/(counter + x), reservoir.length);
+            double h = ((double) reservoir.length / (counter + 1))
+                    * Math.pow((double) (counter - reservoir.length + 1) / (counter + s - reservoir.length + 1), reservoir.length + 1);
+            if (u <= (c * g)/h) {
+                return Math.max(1, s);
             }
-            double y = ((u * (counter) + 1)/term * (counter + s + 1))/(counter + s);
-            double numeratorLimit, denominator;
-            if (s >= reservoir.length) {
-                denominator = counter;
-                numeratorLimit = term + s;
-            } else {
-                denominator = counter - reservoir.length + s;
-                numeratorLimit = counter + 1;
+            // slow path, need to check f
+            double f = 1;
+            for (int i = 0; i <= s; ++i) {
+                f *= (double)(counter - reservoir.length + i)/(counter + 1 + i);
             }
-            double numerator = counter + s;
-            while ( numerator > numeratorLimit) {
-                y = (y * numerator)/denominator;
-                denominator -= 1;
-                numerator -= 1;
-            }
-            w = Math.exp((-Math.log(ThreadLocalRandom.current().nextDouble())/reservoir.length));
-            if (Math.exp(Math.log(y)/reservoir.length) < (counter + x)/counter) {
-                break;
+            f *= reservoir.length;
+            f /= (counter - reservoir.length);
+            if (u <= (c * g)/f) {
+                return Math.max(1, s);
             }
         }
-        return s;
     }
 
     private long nextSkipLinearSearch() {
         long s = 0;
         double u = ThreadLocalRandom.current().nextDouble();
-        double numerator = 1;
-        double denominator = 1;
+        double quotient = (double)(counter + 1 - reservoir.length)/(counter + 1);
+        int i = 1;
         do {
-            numerator *= (Math.max(counter, reservoir.length) + 1 - reservoir.length - s);
-            denominator *= (double)(counter + 1 - s);
+            quotient *= (double)(counter + 1 + i - reservoir.length)/(counter + i + 1);
             ++s;
-        } while (numerator/denominator > u);
+            ++i;
+        } while (quotient > u);
         return s;
     }
 

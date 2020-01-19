@@ -2,6 +2,7 @@ package uk.co.openkappa.reservoir;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
@@ -37,7 +38,7 @@ public class ReservoirDump {
             writeFile("X-" + reservoirSize + "-" + description, sampler.snapshot());
         }
         {
-            var sampler = new AlgorithmZ(reservoirSize, 10);
+            var sampler = new AlgorithmZ(reservoirSize, 1);
             for (double value : data) {
                 sampler.add(value);
             }
@@ -58,6 +59,8 @@ public class ReservoirDump {
         for (int i = 0; i < data.length; ++i) {
             data[i] = exp(intensity);
         }
+        // sort to make sure that there is no position bias!
+        Arrays.sort(data);
         return data;
     }
 
@@ -66,6 +69,8 @@ public class ReservoirDump {
         for (int i = 0; i < data.length; ++i) {
             data[i] = normal(mean, stddev);
         }
+        // sort to make sure that there is no position bias!
+        Arrays.sort(data);
         return data;
     }
 

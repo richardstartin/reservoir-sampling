@@ -9,18 +9,16 @@ public class AlgorithmX {
 
     public AlgorithmX(int size) {
         this.reservoir = new double[size];
-        next = reservoir.length + nextSkip();
+        this.next = reservoir.length;
     }
 
     public void add(double value) {
         if (counter < reservoir.length) {
             reservoir[(int)counter] = value;
-        } else {
-            if (next == counter) {
-                int position = ThreadLocalRandom.current().nextInt(0, reservoir.length);
-                reservoir[position] = value;
-                next += nextSkip();
-            }
+        } else if (next == counter) {
+            int position = ThreadLocalRandom.current().nextInt(0, reservoir.length);
+            reservoir[position] = value;
+            next += nextSkip();
         }
         ++counter;
     }
@@ -28,13 +26,13 @@ public class AlgorithmX {
     private long nextSkip() {
         long s = 0;
         double u = ThreadLocalRandom.current().nextDouble();
-        double numerator = 1;
-        double denominator = 1;
+        double quotient = (double)(counter + 1 - reservoir.length)/(counter + 1);
+        int i = 1;
         do {
-            numerator *= (Math.max(counter, reservoir.length) + 1 - reservoir.length - s);
-            denominator *= (double)(counter + 1 - s);
+            quotient *= (double)(counter + 1 + i - reservoir.length)/(counter + i + 1);
             ++s;
-        } while (numerator/denominator > u);
+            ++i;
+        } while (quotient > u);
         return s;
     }
 
