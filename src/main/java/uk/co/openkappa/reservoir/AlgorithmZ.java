@@ -1,8 +1,9 @@
 package uk.co.openkappa.reservoir;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.DoubleConsumer;
 
-public class AlgorithmZ {
+public class AlgorithmZ implements ReservoirSampler {
     private final double[] reservoir;
     private long counter;
     private long next;
@@ -14,6 +15,7 @@ public class AlgorithmZ {
         next = reservoir.length + nextSkip();
     }
 
+    @Override
     public void add(double value) {
         if (counter < reservoir.length) {
             reservoir[(int)counter] = value;
@@ -25,6 +27,22 @@ public class AlgorithmZ {
             }
         }
         ++counter;
+    }
+
+    @Override
+    public void forEach(DoubleConsumer sampleConsumer) {
+        for (double sample : reservoir) {
+            sampleConsumer.accept(sample);
+        }
+    }
+
+    @Override
+    public double mean() {
+        double sum = 0;
+        for (double v : reservoir) {
+            sum += v;
+        }
+        return sum / reservoir.length;
     }
 
     private long nextSkip() {
@@ -66,14 +84,6 @@ public class AlgorithmZ {
             ++i;
         } while (quotient > u);
         return s;
-    }
-
-    public double mean() {
-        double sum = 0;
-        for (double v : reservoir) {
-            sum += v;
-        }
-        return sum / reservoir.length;
     }
 
     double[] snapshot() {

@@ -44,6 +44,13 @@ public class ReservoirDump {
             }
             writeFile("Z-" + reservoirSize + "-" + description, sampler.snapshot());
         }
+        {
+            var sampler = new AlgorithmL(reservoirSize);
+            for (double value : data) {
+                sampler.add(value);
+            }
+            writeFile("L-" + reservoirSize + "-" + description, sampler.snapshot());
+        }
     }
 
     private static void writeFile(String name, double[] data) {

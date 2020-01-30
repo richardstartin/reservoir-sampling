@@ -32,8 +32,20 @@ public class AlgorithmsTest {
 
 
     @Test
+    public void testAlgorithmL() {
+        var l = new AlgorithmL(sampleSize);
+        for (double value : data) {
+            l.add(value);
+        }
+        double mean = l.mean();
+        // should be very close to the intensity of the exponentially distributed input
+        System.out.println(1/mean);
+        assertEquals(1/mean, intensity, 0.01);
+    }
+
+    @Test
     public void testAlgorithmR() {
-        AlgorithmR r = new AlgorithmR(sampleSize);
+        var r = new AlgorithmR(sampleSize);
         for (double value : data) {
             r.add(value);
         }
@@ -45,7 +57,7 @@ public class AlgorithmsTest {
 
     @Test
     public void testAlgorithmX() {
-        AlgorithmX x = new AlgorithmX(sampleSize);
+        var x = new AlgorithmX(sampleSize);
         for (double value : data) {
             x.add(value);
         }
@@ -57,7 +69,7 @@ public class AlgorithmsTest {
 
     @Test
     public void testAlgorithmZ() {
-        AlgorithmZ z = new AlgorithmZ(sampleSize, 40);
+        var z = new AlgorithmZ(sampleSize, 40);
         for (double value : data) {
             z.add(value);
         }

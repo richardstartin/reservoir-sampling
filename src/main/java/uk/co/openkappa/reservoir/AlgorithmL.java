@@ -3,23 +3,32 @@ package uk.co.openkappa.reservoir;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.DoubleConsumer;
 
-public class AlgorithmR implements ReservoirSampler {
+import static java.lang.Math.exp;
+import static java.lang.Math.log;
+
+public class AlgorithmL implements ReservoirSampler {
 
     private final double[] reservoir;
     private long counter;
+    private long next;
+    private double w;
 
-    public AlgorithmR(int size) {
-        this.reservoir = new double[size];
+    public AlgorithmL(int capacity) {
+        this.reservoir = new double[capacity];
+        next = reservoir.length;
+        w = exp(log(ThreadLocalRandom.current().nextDouble())/reservoir.length);
+        skip();
     }
+
 
     @Override
     public void add(double value) {
         if (counter < reservoir.length) {
             reservoir[(int)counter] = value;
         } else {
-            long replacementIndex = ThreadLocalRandom.current().nextLong(0, counter);
-            if (replacementIndex < reservoir.length) {
-                reservoir[(int)replacementIndex] = value;
+            if (counter == next) {
+                reservoir[ThreadLocalRandom.current().nextInt(reservoir.length)] = value;
+                skip();
             }
         }
         ++counter;
@@ -39,6 +48,11 @@ public class AlgorithmR implements ReservoirSampler {
         for (double sample : reservoir) {
             sampleConsumer.accept(sample);
         }
+    }
+
+    private void skip() {
+        next += (long)(log(ThreadLocalRandom.current().nextDouble())/ log(1-w)) + 1;
+        w *= exp(log(ThreadLocalRandom.current().nextDouble())/reservoir.length);
     }
 
     double[] snapshot() {
