@@ -76,7 +76,7 @@ public class AlgorithmsTest {
         double mean = z.mean();
         // should be very close to the intensity of the exponentially distributed input
         System.out.println(1/mean);
-        assertEquals(1/mean, intensity, 0.05);
+        assertEquals(1/mean, intensity, 0.01);
     }
 
 

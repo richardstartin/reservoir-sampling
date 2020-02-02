@@ -3,6 +3,9 @@ package uk.co.openkappa.reservoir;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.DoubleConsumer;
 
+import static java.lang.Math.exp;
+import static java.lang.Math.log;
+
 public class AlgorithmZ implements ReservoirSampler {
     private final double[] reservoir;
     private long counter;
@@ -12,7 +15,8 @@ public class AlgorithmZ implements ReservoirSampler {
     public AlgorithmZ(int size, int threshold) {
         this.reservoir = new double[size];
         this.threshold = threshold;
-        next = reservoir.length + nextSkip();
+        next = reservoir.length;
+        skip();
     }
 
     @Override
@@ -23,7 +27,7 @@ public class AlgorithmZ implements ReservoirSampler {
             if (next == counter) {
                 int position = ThreadLocalRandom.current().nextInt(0, reservoir.length);
                 reservoir[position] = value;
-                next += nextSkip();
+                skip();
             }
         }
         ++counter;
@@ -45,35 +49,40 @@ public class AlgorithmZ implements ReservoirSampler {
         return sum / reservoir.length;
     }
 
-    private long nextSkip() {
+    private void skip() {
         if (counter <= threshold * reservoir.length) {
-            return nextSkipLinearSearch();
-        }
-        double c = (double)(counter + 1)/(counter - reservoir.length + 1);
-        while (true) {
-            double u = ThreadLocalRandom.current().nextDouble();
-            double x = counter * (Math.exp(ThreadLocalRandom.current().nextDouble() / reservoir.length) - 1);
-            long s = (long)x;
-            double g = (reservoir.length)/(counter + x)*Math.pow(counter/(counter + x), reservoir.length);
-            double h = ((double) reservoir.length / (counter + 1))
-                    * Math.pow((double) (counter - reservoir.length + 1) / (counter + s - reservoir.length + 1), reservoir.length + 1);
-            if (u <= (c * g)/h) {
-                return Math.max(1, s);
+            linearSearch();
+        } else {
+            double c = (double) (counter + 1) / (counter - reservoir.length + 1);
+            double w = exp(-log(ThreadLocalRandom.current().nextDouble()) / reservoir.length);
+            long s;
+            while (true) {
+                double u = ThreadLocalRandom.current().nextDouble();
+                double x = counter * (w - 1D);
+                s = (long) x;
+                double g = (reservoir.length) / (counter + x) * Math.pow(counter / (counter + x), reservoir.length);
+                double h = ((double) reservoir.length / (counter + 1))
+                        * Math.pow((double) (counter - reservoir.length + 1) / (counter + s - reservoir.length + 1), reservoir.length + 1);
+                if (u <= (c * g) / h) {
+                    break;
+                }
+                // slow path, need to check f
+                double f = 1;
+                for (int i = 0; i <= s; ++i) {
+                    f *= (double) (counter - reservoir.length + i) / (counter + 1 + i);
+                }
+                f *= reservoir.length;
+                f /= (counter - reservoir.length);
+                if (u <= (c * g) / f) {
+                    break;
+                }
+                w = exp(-log(ThreadLocalRandom.current().nextDouble()) / reservoir.length);
             }
-            // slow path, need to check f
-            double f = 1;
-            for (int i = 0; i <= s; ++i) {
-                f *= (double)(counter - reservoir.length + i)/(counter + 1 + i);
-            }
-            f *= reservoir.length;
-            f /= (counter - reservoir.length);
-            if (u <= (c * g)/f) {
-                return Math.max(1, s);
-            }
+            next += s + 1;
         }
     }
 
-    private long nextSkipLinearSearch() {
+    private void linearSearch() {
         long s = 0;
         double u = ThreadLocalRandom.current().nextDouble();
         double quotient = (double)(counter + 1 - reservoir.length)/(counter + 1);
@@ -83,7 +92,7 @@ public class AlgorithmZ implements ReservoirSampler {
             ++s;
             ++i;
         } while (quotient > u);
-        return s;
+        next += s + 1;
     }
 
     double[] snapshot() {
